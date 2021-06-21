@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   // Check the number of parameters
   if (argc < 3) {
     // Tell the user how to run the program
-    std::cerr << "Usage: " << "./data_generator <GENOMES_NUM> <THREADS_NUM>" << std::endl
+    std::cerr << "Usage: ./data_generator <GENOMES_NUM> <THREADS_NUM>" << std::endl
               << "<GENOMES_NUM> - number of genomes to generate" << std::endl
               << "<THREADS_NUM> - number of threads to use for generation" << std::endl;
 
