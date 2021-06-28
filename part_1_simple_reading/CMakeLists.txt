@@ -18,5 +18,5 @@ CUDA_ADD_LIBRARY(${PROJECT_NAME}_cuda_lib
         src/analyzer.cu
         inc/analyzer.cuh)
 
-add_executable(${PROJECT_NAME} main.cpp inc/ThreadSafeQueue.h)
+add_executable(${PROJECT_NAME} main.cpp inc/ThreadSafeQueue.h inc/helpers.h src/helpers.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_cuda_lib)

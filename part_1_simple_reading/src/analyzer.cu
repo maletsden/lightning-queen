@@ -15,156 +15,77 @@ __global__ void analyzeGenome(
 }
 
 
-// Convenience function for checking CUDA runtime API results
-// can be wrapped around any runtime API call. No-op in release builds.
-inline
-cudaError_t checkCuda(cudaError_t result) {
-#if defined(DEBUG) || defined(_DEBUG)
-  if (result != cudaSuccess) {
-    fprintf(stderr, "CUDA Runtime Error: %s\n",
-            cudaGetErrorString(result));
-    assert(result == cudaSuccess);
-  }
-#endif
-  return result;
-}
-
-std::string read_file(const std::string &filepath) {
-
-  std::ifstream file(filepath, std::ios::binary | std::ios::ate);
-  std::streamsize size = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  std::string buffer(size, '0');
-  if (file.read(const_cast<char *>(buffer.data()), size)) {
-    return buffer;
-  }
-
-  return "";
-}
-
-void check_results(const std::vector<std::uint32_t>& results) {
-  const auto res = std::accumulate(results.begin(), results.end(), std::uint32_t(0));
-  constexpr std::uint32_t expected_res = 100 * 1024 * 1024; // 100 MB
-  assert(res == expected_res);
-
-  constexpr std::uint32_t expected_res_per_nucleotide = expected_res / 5; // 20 MB
-
-  assert(results['A' - 'A'] == expected_res_per_nucleotide);
-  assert(results['C' - 'A'] == expected_res_per_nucleotide);
-  assert(results['G' - 'A'] == expected_res_per_nucleotide);
-  assert(results['N' - 'A'] == expected_res_per_nucleotide);
-  assert(results['T' - 'A'] == expected_res_per_nucleotide);
-}
-
-void run_analyzer() {
+void run_analyzer(ThreadSafeQueue<std::string> &genomes_queue) {
 
   constexpr std::uint32_t expected_genome_size = 100 * 1024 * 1024; // 100 MB
   constexpr int threadsPerBlock = 256;
   constexpr int blocksPerGrid = (expected_genome_size + threadsPerBlock - 1) / threadsPerBlock;
-  constexpr auto genomes_directory = "../data/";
-  constexpr auto genomes_paths_file_path = "../data/genomes_paths.txt";
 
-  ThreadSafeQueue<std::string> genomes_queue{};
+  cudaDeviceProp prop{};
+  checkCuda(cudaGetDeviceProperties(&prop, 0));
+  std::cout << "Device: " << prop.name << std::endl;
 
+  // Allocate genome buffer on device.
+  char *device_genome_buffer;
 
-  // Producer.
-  std::thread producer{[&genomes_queue]() {
-    std::ifstream genomes_paths_file(genomes_paths_file_path);
+  checkCuda(cudaMalloc(&device_genome_buffer, expected_genome_size)); // device
 
-    std::string genome_path;
-    while (std::getline(genomes_paths_file, genome_path)) {
+  // Allocate result vector on device.
+  std::uint32_t *results_vector;
 
-      auto relative_path = genomes_directory + genome_path;
-      auto file = read_file(relative_path);
+  constexpr std::uint32_t results_buffer_size = 16;
+  constexpr std::uint32_t results_buffer_size_in_bytes = results_buffer_size * sizeof(std::uint32_t);
 
-      if (file.empty()) {
-        std::cerr << "Failed reading file: " << genome_path << std::endl;
-        continue;
-      }
+  checkCuda(cudaMalloc(&results_vector, results_buffer_size_in_bytes)); // device
 
-      genomes_queue.enqueue(file);
+  std::vector<std::uint32_t> host_result_vector(results_buffer_size);
 
-    }
+  // Events for timing.
+  cudaEvent_t startEvent, stopEvent;
 
-    // Add poison pill.
-    genomes_queue.enqueue("");
-  }};
+  checkCuda(cudaEventCreate(&startEvent));
+  checkCuda(cudaEventCreate(&stopEvent));
 
 
+  while (true) {
+    auto file = genomes_queue.dequeue();
 
-  // Consumer.
-  {
+    // Catch poison pill.
+    if (file.empty()) break;
 
-    cudaDeviceProp prop{};
-    checkCuda(cudaGetDeviceProperties(&prop, 0));
-    printf("\nDevice: %s\n", prop.name);
+    printf("Transfer size (MB): %lu\n", file.size() / (1024 * 1024));
 
+    checkCuda(cudaEventRecord(startEvent, nullptr));
 
-    char *device_genome_buffer;
+    checkCuda(cudaMemset(results_vector, 0, results_buffer_size_in_bytes));
 
-    checkCuda(cudaMalloc(&device_genome_buffer, expected_genome_size)); // device
+    checkCuda(cudaMemcpy(device_genome_buffer, file.data(), file.size(), cudaMemcpyHostToDevice));
 
-    // Allocate result vector on device.
-    std::uint32_t *results_vector;
+    // Invoke kernel.
+    analyzeGenome<<<blocksPerGrid, threadsPerBlock>>>(device_genome_buffer, results_vector, file.size());
 
-    constexpr std::uint32_t results_buffer_size = 16;
-    constexpr std::uint32_t results_buffer_size_in_bytes = results_buffer_size * sizeof(std::uint32_t);
+    checkCuda(cudaEventSynchronize(stopEvent));
 
-    checkCuda(cudaMalloc(&results_vector, results_buffer_size_in_bytes)); // device
-
-    std::vector<std::uint32_t> host_result_vector(results_buffer_size);
-
-    // Events for timing.
-    cudaEvent_t startEvent, stopEvent;
-
-    checkCuda(cudaEventCreate(&startEvent));
-    checkCuda(cudaEventCreate(&stopEvent));
-
-
-    while (true) {
-      auto file = genomes_queue.dequeue();
-
-      // Catch poison pill.
-      if (file.empty()) break;
-
-      printf("Transfer size (MB): %lu\n", file.size() / (1024 * 1024));
-
-      checkCuda(cudaEventRecord(startEvent, nullptr));
-
-      checkCuda(cudaMemset(results_vector, 0, results_buffer_size_in_bytes));
-
-      checkCuda(cudaMemcpy(device_genome_buffer, file.data(), file.size(), cudaMemcpyHostToDevice));
-
-      // Invoke kernel.
-      analyzeGenome<<<blocksPerGrid, threadsPerBlock>>>(device_genome_buffer, results_vector, file.size());
-
-      checkCuda(cudaEventSynchronize(stopEvent));
-
-      checkCuda(
-          cudaMemcpy(
+    checkCuda(
+        cudaMemcpy(
             host_result_vector.data(), results_vector, results_buffer_size_in_bytes, cudaMemcpyDeviceToHost
-          )
-      );
+        )
+    );
 
-      checkCuda(cudaEventRecord(stopEvent, nullptr));
-      checkCuda(cudaEventSynchronize(stopEvent));
+    checkCuda(cudaEventRecord(stopEvent, nullptr));
+    checkCuda(cudaEventSynchronize(stopEvent));
 
-      // Check results.
-      check_results(host_result_vector);
+    // Check results.
+    check_results(host_result_vector);
 
-      float time;
-      checkCuda(cudaEventElapsedTime(&time, startEvent, stopEvent));
-      printf("  Host to Device bandwidth (GB/s): %f\n", static_cast<double>(file.size()) * 1e-6 / time);
-    }
-
-    // Clean up events.
-    checkCuda(cudaEventDestroy(startEvent));
-    checkCuda(cudaEventDestroy(stopEvent));
-
-    cudaFree(device_genome_buffer);
+    float time;
+    checkCuda(cudaEventElapsedTime(&time, startEvent, stopEvent));
+    printf("  Host to Device bandwidth (GB/s): %f\n", static_cast<double>(file.size()) * 1e-6 / time);
   }
 
-  producer.join();
+  // Clean up events.
+  checkCuda(cudaEventDestroy(startEvent));
+  checkCuda(cudaEventDestroy(stopEvent));
 
+  cudaFree(device_genome_buffer);
 }
