@@ -1,0 +1,10 @@
+# IDE
+**/.idea
+
+# build
+**/build
+**/cmake-build-*
+
+# data
+/data/bank
+/data/genomes_paths.txt
