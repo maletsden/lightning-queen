@@ -9,6 +9,7 @@
 #include <thread>
 #include <filesystem>
 #include <cstring>
+#include <cassert>
 
 void generate_genomes(const std::vector<std::string> &genomes_paths);
 
@@ -26,9 +27,6 @@ int main(int argc, char **argv) {
   const int genomes_num = std::stoi(argv[1]);
   const int thread_num = std::stoi(argv[2]);
 
-  // create genomes paths
-  std::filesystem::create_directory("./bank");
-
   std::vector<std::string> genomes_paths;
   genomes_paths.reserve(genomes_num);
 
@@ -43,23 +41,23 @@ int main(int argc, char **argv) {
   auto genomes_paths_start = genomes_paths.begin();
   const auto genomes_per_thread = genomes_num / thread_num;
 
-  std::cout << "start generating genomes" << std::endl;
+  std::cout << "Start generating genomes..." << std::endl;
   for (int i = 0; i < thread_num; ++i) {
     std::vector<std::string> thread_genomes_paths{
-      genomes_paths_start, std::min(genomes_paths_start + genomes_per_thread, genomes_paths.end())
+        genomes_paths_start, std::min(genomes_paths_start + genomes_per_thread, genomes_paths.end())
     };
     threads.emplace_back(generate_genomes, thread_genomes_paths);
     genomes_paths_start += genomes_per_thread;
   }
 
-  for (auto& thread: threads) {
+  for (auto &thread: threads) {
     thread.join();
   }
 
   // save genomes paths
   std::ofstream genomes_paths_file;
   genomes_paths_file.open("genomes_paths.txt");
-  for (const auto& genome_path: genomes_paths) {
+  for (const auto &genome_path: genomes_paths) {
     genomes_paths_file << genome_path << std::endl;
   }
   genomes_paths_file.close();
@@ -71,10 +69,10 @@ int main(int argc, char **argv) {
 
 
 void generate_genomes(const std::vector<std::string> &genomes_paths) {
-  constexpr std::uint32_t genome_size = 1e8;
-  // generated genome will consists equal amount of all nucleotides (20% = 2e7)
-  constexpr std::uint32_t num_same_nucleotides = 2e7;
-  constexpr std::array<char, 4> nucleotides{'A', 'C', 'D', 'T'};
+  constexpr std::uint32_t genome_size = 100 * 1024 * 1024; // 100 MB
+  // generated genome will consists equal amount of all nucleotides (20% = 20 MB)
+  constexpr std::uint32_t num_same_nucleotides = 20 * 1024 * 1024;
+  constexpr std::array<char, 4> nucleotides{'A', 'C', 'G', 'T'};
   constexpr char default_nucleotide = 'N';
 
   // generate genome
@@ -85,6 +83,12 @@ void generate_genomes(const std::vector<std::string> &genomes_paths) {
     memset(start, nucleotide, num_same_nucleotides);
     start += num_same_nucleotides;
   }
+
+  for (char nucleotide : nucleotides) {
+    assert(std::count(genome.begin(), genome.end(), nucleotide) == num_same_nucleotides);
+  }
+  assert(std::count(genome.begin(), genome.end(), default_nucleotide) == num_same_nucleotides);
+
 
   for (const auto &genome_path: genomes_paths) {
     // shuffle genome
