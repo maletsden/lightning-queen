@@ -3,10 +3,10 @@
 Usage:
 
 ```bash
-cd data
+cd data_generator
 cmake -B build -D CMAKE_BUILD_TYPE=Release
 cmake --build build
-./data_generator <GENOMES_NUM> <THREADS_NUM>
+./build/data_generator/data_generator <GENOMES_NUM> <THREADS_NUM>
 ```
 
 Usage of data_generator:

@@ -1,5 +1,5 @@
-#ifndef PART_1_SIMPLE_READING_THREAD_SAFE_QUEUE_H
-#define PART_1_SIMPLE_READING_THREAD_SAFE_QUEUE_H
+#ifndef COMMON_PARTS_THREAD_SAFE_QUEUE_H
+#define COMMON_PARTS_THREAD_SAFE_QUEUE_H
 
 #include <queue>
 #include <mutex>
@@ -18,10 +18,11 @@ public:
   ~ThreadSafeQueue() = default;
 
   // Add an element to the queue.
-  void enqueue(T t)
+  template<class D>
+  void enqueue(D&& t)
   {
     std::lock_guard<std::mutex> lock(m);
-    q.push(t);
+    q.push(std::forward<D>(t));
     c.notify_one();
   }
 
@@ -46,4 +47,4 @@ private:
   std::condition_variable c;
 };
 
-#endif //PART_1_SIMPLE_READING_THREAD_SAFE_QUEUE_H
+#endif //COMMON_PARTS_THREAD_SAFE_QUEUE_H

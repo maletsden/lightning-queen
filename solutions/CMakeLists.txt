@@ -1,0 +1,5 @@
+add_subdirectory(common_parts)
+include_directories(common_parts)
+
+add_subdirectory(part_1_simple_reading)
+add_subdirectory(part_2_simple_reading_cache_friendly)

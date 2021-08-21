@@ -24,13 +24,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  const int genomes_num = std::stoi(argv[1]);
-  const int thread_num = std::stoi(argv[2]);
+  const auto genomes_num = std::stoi(argv[1]);
+  const auto thread_num = std::stoi(argv[2]);
 
   std::vector<std::string> genomes_paths;
   genomes_paths.reserve(genomes_num);
 
-  for (int i = 0; i < genomes_num; ++i) {
+  for (auto i = 0; i < genomes_num; ++i) {
     genomes_paths.emplace_back("./bank/genome_" + std::to_string(i) + ".fasta");
   }
 
@@ -38,15 +38,15 @@ int main(int argc, char **argv) {
   std::vector<std::thread> threads;
   threads.reserve(thread_num);
 
-  auto genomes_paths_start = genomes_paths.begin();
+  auto genomes_paths_start = genomes_paths.cbegin();
   const auto genomes_per_thread = genomes_num / thread_num;
 
   std::cout << "Start generating genomes..." << std::endl;
-  for (int i = 0; i < thread_num; ++i) {
+  for (auto i = 0; i < thread_num; ++i) {
     std::vector<std::string> thread_genomes_paths{
-        genomes_paths_start, std::min(genomes_paths_start + genomes_per_thread, genomes_paths.end())
+        genomes_paths_start, std::min(genomes_paths_start + genomes_per_thread, genomes_paths.cend())
     };
-    threads.emplace_back(generate_genomes, thread_genomes_paths);
+    threads.emplace_back(generate_genomes, std::move(thread_genomes_paths));
     genomes_paths_start += genomes_per_thread;
   }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
 void generate_genomes(const std::vector<std::string> &genomes_paths) {
   constexpr std::uint32_t genome_size = 100 * 1024 * 1024; // 100 MB
-  // generated genome will consists equal amount of all nucleotides (20% = 20 MB)
+  // generated genome will consist equal amount of all nucleotides (20% = 20 MB)
   constexpr std::uint32_t num_same_nucleotides = 20 * 1024 * 1024;
   constexpr std::array<char, 4> nucleotides{'A', 'C', 'G', 'T'};
   constexpr char default_nucleotide = 'N';
@@ -85,9 +85,9 @@ void generate_genomes(const std::vector<std::string> &genomes_paths) {
   }
 
   for (char nucleotide : nucleotides) {
-    assert(std::count(genome.begin(), genome.end(), nucleotide) == num_same_nucleotides);
+    assert(std::count(genome.cbegin(), genome.cend(), nucleotide) == num_same_nucleotides);
   }
-  assert(std::count(genome.begin(), genome.end(), default_nucleotide) == num_same_nucleotides);
+  assert(std::count(genome.cbegin(), genome.cend(), default_nucleotide) == num_same_nucleotides);
 
 
   for (const auto &genome_path: genomes_paths) {

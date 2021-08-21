@@ -10,7 +10,7 @@ For generating fake 100 MB long genomes there is small project written in `data`
 Usage:
 
 ```bash
-cd data
+cd data_generator
 cmake -B build -D CMAKE_BUILD_TYPE=Release
 cmake --build build
 ./data_generator <GENOMES_NUM> <THREADS_NUM>

@@ -1,0 +1,4 @@
+add_subdirectory(thread_safe_queue)
+add_subdirectory(validator)
+add_subdirectory(cuda_validator)
+add_subdirectory(fs_handler)
