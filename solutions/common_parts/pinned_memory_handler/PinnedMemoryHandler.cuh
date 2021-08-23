@@ -3,11 +3,13 @@
 
 #include <cstddef>
 
+#include <driver_types.h>
+
 class PinnedMemoryHandler {
 public:
   PinnedMemoryHandler() = default;
 
-  explicit PinnedMemoryHandler(size_t filesize);
+  explicit PinnedMemoryHandler(size_t filesize, unsigned int flags = cudaHostAllocDefault);
 
   ~PinnedMemoryHandler();
 
