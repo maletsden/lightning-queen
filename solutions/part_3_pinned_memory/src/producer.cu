@@ -16,7 +16,7 @@ void producer::produce(analyzer::QUEUE_T &genomes_queue, const std::string &geno
     const auto filepath = genomes_directory + genome_path;
     const auto filesize = fs_handler::get_filesize(filepath);
 
-    const auto file_handler_ptr = std::make_shared<PinnedFileHandler>(static_cast<size_t>(filesize));
+    const auto file_handler_ptr = std::make_shared<PinnedMemoryHandler>(static_cast<size_t>(filesize));
 
     const auto buffer_ptr = fs_handler::read_file(filepath, file_handler_ptr->get_data(), filesize);
 
@@ -29,5 +29,5 @@ void producer::produce(analyzer::QUEUE_T &genomes_queue, const std::string &geno
   }
 
   // Add poison pill.
-  genomes_queue.enqueue(std::make_shared<PinnedFileHandler>());
+  genomes_queue.enqueue(std::make_shared<PinnedMemoryHandler>());
 }

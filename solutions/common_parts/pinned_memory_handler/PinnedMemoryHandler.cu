@@ -1,12 +1,12 @@
-#include "PinnedFileHandler.cuh"
+#include "PinnedMemoryHandler.cuh"
 
 #include <cuda.h>
 #include <cuda_validator/cuda_validator.h>
 
-PinnedFileHandler::PinnedFileHandler(size_t filesize) : size(filesize) {
+PinnedMemoryHandler::PinnedMemoryHandler(size_t filesize) : size(filesize) {
   cuda_validator::check_error(cudaHostAlloc(&data, filesize, cudaHostAllocDefault));
 }
 
-PinnedFileHandler::~PinnedFileHandler() {
+PinnedMemoryHandler::~PinnedMemoryHandler() {
   if (data) cudaFreeHost(data);
 }

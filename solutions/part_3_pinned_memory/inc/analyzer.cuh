@@ -5,12 +5,12 @@
 #include <cuda.h>
 #include <driver_types.h>
 
-#include <PinnedFileHandler.cuh>
+#include <pinned_memory_handler/PinnedMemoryHandler.cuh>
 #include <thread_safe_queue/ThreadSafeQueue.h>
 
 namespace analyzer {
   using RESULT_T = std::uint32_t;
-  using QUEUE_T = ThreadSafeQueue<std::shared_ptr<PinnedFileHandler>>;
+  using QUEUE_T = ThreadSafeQueue<std::shared_ptr<PinnedMemoryHandler>>;
 
   constexpr RESULT_T CACHE_LINE_SIZE = 128;
 
