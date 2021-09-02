@@ -45,6 +45,11 @@ namespace genome_zipper {
     return zip(genome.data(), genome.size());
   }
 
+  template<typename S, int size>
+  auto zip(S(&genome)[size]) {
+    return zip(genome, size - (genome[size - 1] == '\0'));
+  }
+
   char zip_3_chars(const char *chars) {
     const BYTE N_num = (chars[0] == 'N') + (chars[1] == 'N') + (chars[2] == 'N');
 
@@ -58,13 +63,13 @@ namespace genome_zipper {
     };
     switch (N_num) {
       case 0:
-        encoded_char |= translate[chars[2] - 'A'];
+        encoded_char |= translate[chars[0] - 'A'];
         encoded_char <<= 2;
 
         encoded_char |= translate[chars[1] - 'A'];
         encoded_char <<= 2;
 
-        encoded_char |= translate[chars[0] - 'A'];
+        encoded_char |= translate[chars[2] - 'A'];
         break;
       case 1: {
         // in this case we also need to save index of N
@@ -73,7 +78,7 @@ namespace genome_zipper {
         encoded_char |= N_index;
 
         // encode 2 "not N" chars
-        for (auto i = 0; i <= 3; ++i) {
+        for (auto i = 0; i < 3; ++i) {
           if (i == N_index) continue;
           encoded_char <<= 2;
           encoded_char |= translate[chars[i] - 'A'];
@@ -87,13 +92,14 @@ namespace genome_zipper {
         encoded_char |= not_N_index;
         encoded_char <<= 2;
         encoded_char |= translate[chars[not_N_index] - 'A'];
+        encoded_char <<= 2;
         break;
       }
       default:
         // in other case (N_num == 3) we can just finish
+        encoded_char <<= 4;
         break;
     }
-
     return static_cast<char>(encoded_char);
   }
 

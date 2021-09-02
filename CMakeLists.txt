@@ -13,3 +13,5 @@ include_directories(common_parts)
 
 add_subdirectory(data_generator)
 add_subdirectory(solutions)
+
+add_subdirectory(tests)
