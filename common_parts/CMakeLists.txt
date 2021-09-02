@@ -1,1 +1,2 @@
 add_subdirectory(fs_handler)
+add_subdirectory(genome_zipper)
