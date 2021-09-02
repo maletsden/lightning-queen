@@ -8,5 +8,8 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 
 find_package(Threads REQUIRED)
 
+add_subdirectory(common_parts)
+include_directories(common_parts)
+
 add_subdirectory(data_generator)
 add_subdirectory(solutions)
