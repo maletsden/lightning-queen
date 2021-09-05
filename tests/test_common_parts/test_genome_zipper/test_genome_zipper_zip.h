@@ -2,10 +2,9 @@
 
 #include <genome_zipper/genome_zipper.h>
 
-// The fixture for testing class Foo.
 class TestGenomeZipperZip : public ::testing::Test {
 protected:
-  void CompareResults(const genome_zipper::ZippedGenome &zipped, const genome_zipper::ZippedGenome &expected) {
+  static void CompareResults(const genome_zipper::ZippedGenome &zipped, const genome_zipper::ZippedGenome &expected) {
     EXPECT_EQ(zipped.container.size(), expected.container.size());
     EXPECT_EQ(zipped.real_size, expected.real_size);
     EXPECT_STREQ(zipped.container.data(), expected.container.data());
@@ -89,7 +88,7 @@ TEST_F(TestGenomeZipperZip, SimpleTwoNTest) {
 
   genome_zipper::ZippedGenome expected_result;
   expected_result.real_size = genome.size();
-  expected_result.container.push_back(0b10100100);
+  expected_result.container.push_back(static_cast<char>(0b10100100));
 
   auto zipped_genome = genome_zipper::zip(genome);
 
@@ -100,7 +99,7 @@ TEST_F(TestGenomeZipperZip, SimpleTwoNTest) {
   genome = "NAN";
 
   expected_result.real_size = genome.size();
-  expected_result.container[0] = 0b10010000;
+  expected_result.container[0] = static_cast<char>(0b10010000);
 
   zipped_genome = genome_zipper::zip(genome);
 
@@ -111,7 +110,7 @@ TEST_F(TestGenomeZipperZip, SimpleTwoNTest) {
   genome = "ANN";
 
   expected_result.real_size = genome.size();
-  expected_result.container[0] = 0b10000000;
+  expected_result.container[0] = static_cast<char>(0b10000000);
 
   zipped_genome = genome_zipper::zip(genome);
 
@@ -123,7 +122,7 @@ TEST_F(TestGenomeZipperZip, SimpleThreeNTest) {
 
   genome_zipper::ZippedGenome expected_result;
   expected_result.real_size = genome.size();
-  expected_result.container.push_back(0b11000000);
+  expected_result.container.push_back(static_cast<char>(0b11000000));
 
   const auto zipped_genome = genome_zipper::zip(genome);
 
@@ -194,15 +193,9 @@ TEST_F(TestGenomeZipperZip, NotDiv3GenomeTest) {
   genome = "ACGNN";
 
   expected_result.real_size = genome.size();
-  expected_result.container[1] = 0b10100000;
+  expected_result.container[1] = static_cast<char>(0b10100000);
 
   zipped_genome = genome_zipper::zip(genome);
 
   CompareResults(zipped_genome, expected_result);
-}
-
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }
