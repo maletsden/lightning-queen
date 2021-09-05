@@ -1,43 +1,15 @@
 #include "gtest/gtest.h"
 
 #include <genome_zipper/genome_zipper.h>
-#include <bitset>
 
 // The fixture for testing class Foo.
 class TestGenomeZipperZip : public ::testing::Test {
 protected:
-  // You can remove any or all of the following functions if their bodies would
-  // be empty.
-
-  TestGenomeZipperZip() {
-    // You can do set-up work for each test here.
-  }
-
-  ~TestGenomeZipperZip() override {
-    // You can do clean-up work that doesn't throw exceptions here.
-  }
-
-  // If the constructor and destructor are not enough for setting up
-  // and cleaning up each test, you can define the following methods:
-
-  void SetUp() override {
-    // Code here will be called immediately after the constructor (right
-    // before each test).
-  }
-
-  void TearDown() override {
-    // Code here will be called immediately after each test (right
-    // before the destructor).
-  }
-
   void CompareResults(const genome_zipper::ZippedGenome &zipped, const genome_zipper::ZippedGenome &expected) {
     EXPECT_EQ(zipped.container.size(), expected.container.size());
     EXPECT_EQ(zipped.real_size, expected.real_size);
     EXPECT_STREQ(zipped.container.data(), expected.container.data());
   }
-
-  // Class members declared here can be used by all tests in the test suite
-  // for Foo.
 };
 
 TEST_F(TestGenomeZipperZip, SimpleZeroNTestArrayInput) {
@@ -158,6 +130,76 @@ TEST_F(TestGenomeZipperZip, SimpleThreeNTest) {
   CompareResults(zipped_genome, expected_result);
 }
 
+TEST_F(TestGenomeZipperZip, LongGenomeTest) {
+  const std::string genome = "ACGTNA";
+
+  genome_zipper::ZippedGenome expected_result;
+  expected_result.real_size = genome.size();
+  expected_result.container.push_back(0b00000110);
+  expected_result.container.push_back(0b01011100);
+
+  const auto zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+}
+
+TEST_F(TestGenomeZipperZip, NotDiv3GenomeTest) {
+  // expected to interpret as "ACGTAA" (zeros in the end)
+  std::string genome = "ACGT";
+
+  genome_zipper::ZippedGenome expected_result;
+  expected_result.real_size = genome.size();
+  expected_result.container.push_back(0b00000110);
+  expected_result.container.push_back(0b00110000);
+
+  auto zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+
+  // ---------- //
+  // expected to interpret as "ACGNAA" (zeros in the end)
+  genome = "ACGN";
+
+  expected_result.real_size = genome.size();
+  expected_result.container[1] = 0b01000000;
+
+  zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+
+  // ---------- //
+  // expected to interpret as "ACGTAA" (zeros in the end)
+  genome = "ACGTA";
+
+  expected_result.real_size = genome.size();
+  expected_result.container[1] = 0b00110000;
+
+  zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+
+  // ---------- //
+  // expected to interpret as "ACGTNA" (zeros in the end)
+  genome = "ACGTN";
+
+  expected_result.real_size = genome.size();
+  expected_result.container[1] = 0b01011100;
+
+  zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+
+  // ---------- //
+  // expected to interpret as "ACGNNA" (zeros in the end)
+  genome = "ACGNN";
+
+  expected_result.real_size = genome.size();
+  expected_result.container[1] = 0b10100000;
+
+  zipped_genome = genome_zipper::zip(genome);
+
+  CompareResults(zipped_genome, expected_result);
+}
 
 
 int main(int argc, char **argv) {
