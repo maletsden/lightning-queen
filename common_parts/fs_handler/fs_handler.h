@@ -42,12 +42,16 @@ namespace fs_handler {
     return size;
   }
 
-  auto get_filesize(const std::string& filepath) {
+  auto get_filesize(const std::string &filepath) {
     FileHandler<std::ifstream> file_handler{filepath, std::ios::binary};
     return get_filesize(file_handler.file);
   }
 
-  template<typename stream_type, typename D>
+  template<typename stream_type,
+      typename D,
+      std::enable_if_t<
+          std::is_base_of_v<std::ifstream, stream_type> || std::is_base_of_v<std::fstream, stream_type>, bool> = true
+  >
   auto read_file(stream_type &file, D *buffer, size_t size) {
     assert_file_is_open(file, "File is not opened.");
 
@@ -83,7 +87,7 @@ namespace fs_handler {
   template<typename S, typename D>
   auto write_files(S &&filepath, const std::vector<D> &data) {
     FileHandler<std::ofstream> file_handler{filepath};
-    for (const auto& str: data) file_handler.file << str;
+    for (const auto &str: data) file_handler.file << str;
   }
 
 }
