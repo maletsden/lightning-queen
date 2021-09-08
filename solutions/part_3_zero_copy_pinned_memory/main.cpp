@@ -1,10 +1,7 @@
-#include <fstream>
 #include <thread>
-#include <iostream>
 
 #include <analyzer.cuh>
 #include <producer.cuh>
-#include <memory>
 
 int main() {
   const std::string genomes_directory = "../../data_generator/";

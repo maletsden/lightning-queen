@@ -1,6 +1,5 @@
 #include <thread>
 #include <iostream>
-#include <fstream>
 
 #include <analyzer.cuh>
 #include <fs_handler/fs_handler.h>
