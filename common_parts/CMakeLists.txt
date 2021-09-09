@@ -1,3 +1,4 @@
 add_subdirectory(fs_handler)
 add_subdirectory(genome_zipper)
 add_subdirectory(thread_safe_queue)
+add_subdirectory(stopwatch)
