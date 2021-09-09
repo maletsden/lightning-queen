@@ -5,34 +5,28 @@
 #include <iostream>
 #include <type_traits>
 
+#include "FileHandler.h"
+
 namespace fs_handler {
-  template<typename stream_type, typename S>
-  auto assert_file_is_open(const stream_type &file, S &&msg) {
-    if (!file.is_open()) {
-      std::cerr << msg << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  template<typename T>
-  class FileHandler {
-  public:
-    template<typename S>
-    explicit FileHandler(const S &filepath, std::ios_base::openmode mode = std::ios_base::in) {
-      file.open(filepath, mode);
-
-      assert_file_is_open(file, "ERROR: Cannot open file " + filepath);
-    }
-
-    ~FileHandler() {
-      file.close();
-    }
-
-    T file;
+  template<class T>
+  struct remove_cvref {
+    typedef std::remove_cv_t<std::remove_reference_t<T>> type;
   };
+  template<class T>
+  using remove_cvref_t = typename remove_cvref<T>::type;
 
   template<typename stream_type>
-  auto get_filesize(stream_type &file) {
+  constexpr bool is_file_stream = std::is_base_of_v<std::fstream,  remove_cvref_t<stream_type>>;
+  template<typename stream_type>
+  constexpr bool is_input_file_stream =
+      std::is_base_of_v<std::ifstream,  remove_cvref_t<stream_type>> || is_file_stream<stream_type>;
+  template<typename stream_type>
+  constexpr bool is_output_file_stream =
+      std::is_base_of_v<std::ofstream, remove_cvref_t<stream_type>> || is_file_stream<stream_type>;
+
+
+  template<typename stream_type, std::enable_if_t<is_input_file_stream<stream_type>, bool> = true>
+  auto get_filesize(stream_type &&file) {
     assert_file_is_open(file, "File is not opened.");
 
     file.seekg(0, std::ios::end);
@@ -43,16 +37,11 @@ namespace fs_handler {
   }
 
   auto get_filesize(const std::string &filepath) {
-    FileHandler<std::ifstream> file_handler{filepath, std::ios::binary};
-    return get_filesize(file_handler.file);
+    return get_filesize(make_readable_file_handler(filepath).file);
   }
 
-  template<typename stream_type,
-      typename D,
-      std::enable_if_t<
-          std::is_base_of_v<std::ifstream, stream_type> || std::is_base_of_v<std::fstream, stream_type>, bool> = true
-  >
-  auto read_file(stream_type &file, D *buffer, size_t size) {
+  template<typename stream_type, typename D, std::enable_if_t<is_input_file_stream<stream_type>, bool> = true>
+  auto read_file(stream_type &&file, D *buffer, size_t size) {
     assert_file_is_open(file, "File is not opened.");
 
     return file.read(buffer, size) ? buffer : nullptr;
@@ -60,8 +49,7 @@ namespace fs_handler {
 
   template<typename S>
   auto read_file(S &&filepath) {
-    FileHandler<std::ifstream> file_handler{filepath, std::ios::binary};
-
+    auto file_handler = make_readable_file_handler(std::forward<S>(filepath));
     const auto size = get_filesize(file_handler.file);
 
     std::string buffer(size, '\0');
@@ -72,24 +60,15 @@ namespace fs_handler {
     return buffer;
   }
 
-  template<typename S, typename D>
-  auto read_file(S &&filepath, D *buffer, size_t size) {
-    FileHandler<std::ifstream> file_handler{filepath, std::ios::binary};
-    return read_file(file_handler.file, buffer, size);
+  template<typename D>
+  auto read_file(const std::string &filepath, D *buffer, size_t size) {
+    return read_file(make_readable_file_handler(filepath).file, buffer, size);
   }
 
   template<typename S, typename D>
   auto write_file(S &&filepath, D &&data) {
-    FileHandler<std::ofstream> file_handler{filepath};
-    file_handler.file << data;
+    make_writable_file_handler(std::forward<S>(filepath)) << std::forward<D>(data);
   }
-
-  template<typename S, typename D>
-  auto write_files(S &&filepath, const std::vector<D> &data) {
-    FileHandler<std::ofstream> file_handler{filepath};
-    for (const auto &str: data) file_handler.file << str;
-  }
-
 }
 
 #endif //COMMON_PARTS_FS_HANDLER_H
