@@ -4,8 +4,10 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <filesystem>
 
 #include <genome_generator.h>
+#include <fs_handler/FileHandler.h>
 
 int main(int argc, char **argv) {
   // Check the number of parameters
@@ -25,25 +27,27 @@ int main(int argc, char **argv) {
   genomes_paths.reserve(genomes_num);
 
   for (auto i = 0; i < genomes_num; ++i) {
-    genomes_paths.emplace_back("../bank/genome_" + std::to_string(i) + ".fasta");
+    genomes_paths.emplace_back("./bank/genome_" + std::to_string(i) + ".fasta");
   }
 
   // start generating genomes
   std::vector<std::thread> threads;
   threads.reserve(thread_num);
 
-  auto genomes_paths_start = genomes_paths.cbegin();
   const auto genomes_per_thread = (genomes_num + thread_num - 1) / thread_num;
 
   constexpr size_t genome_size = 100 * 1024 * 1024; // 100 MB
 
+  const std::string output_directory = "../bank";
+  std::filesystem::create_directories(output_directory);
+
   std::cout << "Start generating genomes..." << std::endl;
-  for (auto i = 0; i < thread_num; ++i) {
+  for (auto genomes_paths_start = genomes_paths.cbegin();
+       genomes_paths_start < genomes_paths.cend(); genomes_paths_start += genomes_per_thread) {
     std::vector<std::string> thread_genomes_paths{
         genomes_paths_start, std::min(genomes_paths_start + genomes_per_thread, genomes_paths.cend())
     };
     threads.emplace_back(genome_generator::generate, std::move(thread_genomes_paths), genome_size);
-    genomes_paths_start += genomes_per_thread;
   }
 
   for (auto &thread: threads) {
@@ -51,14 +55,10 @@ int main(int argc, char **argv) {
   }
 
   // save genomes paths
-  std::ofstream genomes_paths_file;
-  genomes_paths_file.open("../genomes_paths.txt");
+  auto genomes_paths_file_handler = fs_handler::make_writable_file_handler("../genomes_paths.txt");
   for (const auto &genome_path: genomes_paths) {
-    genomes_paths_file << genome_path << std::endl;
+    genomes_paths_file_handler << genome_path << '\n';
   }
-  genomes_paths_file.close();
-
-  std::cout << "Genomes successfully generated." << std::endl;
 
   return 0;
 }

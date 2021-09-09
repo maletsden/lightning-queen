@@ -28,7 +28,7 @@ void genome_generator::generate(const std::vector<std::string> &genomes_paths, s
     std::shuffle(genome.begin(), genome.end(), std::mt19937(std::random_device()()));
 
     // save to file
-    fs_handler::write_file(genome_path, genome);
+    fs_handler::write_file("../" + genome_path, genome);
 
     std::cout << "Genome successfully written to: " << genome_path << std::endl;
   }
