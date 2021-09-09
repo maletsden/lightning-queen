@@ -1,3 +1,2 @@
-project(data_generator LANGUAGES CXX)
-
 add_subdirectory(genome_generator)
+add_subdirectory(genome_zipper)

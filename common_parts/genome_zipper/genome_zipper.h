@@ -7,7 +7,12 @@
 namespace genome_zipper {
   using BYTE = std::uint8_t;
 
-  struct ZippedGenome {
+  class ZippedGenome {
+  public:
+    bool is_empty() const {
+      return real_size == 0;
+    }
+
     size_t real_size{0};
     std::string container;
   };
