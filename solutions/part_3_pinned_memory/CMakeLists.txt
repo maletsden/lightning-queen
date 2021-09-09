@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME}_Analyzer STATIC
         inc/producer.cuh)
 set_target_properties(${PROJECT_NAME}_Analyzer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_include_directories(${PROJECT_NAME}_Analyzer PUBLIC "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+target_link_libraries(${PROJECT_NAME}_Analyzer PRIVATE CudaStopwatch)
 
 add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -18,4 +19,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Validator
         ThreadSafeQueue
         FsHandler
-        Threads::Threads)
+        Threads::Threads
+        Stopwatch)

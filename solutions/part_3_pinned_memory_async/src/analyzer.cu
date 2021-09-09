@@ -7,6 +7,7 @@
 
 #include <validator/validator.h>
 #include <cuda_validator/cuda_validator.h>
+#include <cuda_stopwatch/CudaStopwatch.cuh>
 
 
 __global__ void analyzer::analyze_genome(
@@ -49,11 +50,7 @@ void analyzer::analyze(QUEUE_T &genomes_queue) {
   std::vector<RESULT_T> host_result_vector(results_buffer_size);
   std::vector<RESULT_T> host_result_vector_total(results_buffer_size / threadsPerBlock);
 
-  // Events for timing.
-  cudaEvent_t startEvent, stopEvent;
-
-  cuda_validator::check_error(cudaEventCreate(&startEvent));
-  cuda_validator::check_error(cudaEventCreate(&stopEvent));
+  CudaStopwatch cuda_stopwatch;
 
   constexpr auto n_streams = 4;
 
@@ -72,9 +69,8 @@ void analyzer::analyze(QUEUE_T &genomes_queue) {
     if (file_handler->is_empty()) break;
 
     const auto filesize = file_handler->get_size();
-    std::cout << "Transfer size (MB): " << filesize / (1024 * 1024) << std::endl;
 
-    cuda_validator::check_error(cudaEventRecord(startEvent, nullptr));
+    cuda_stopwatch.start(filesize);
 
     cuda_validator::check_error(cudaMemset(results_vector, 0, results_buffer_size_in_bytes));
 
@@ -87,8 +83,6 @@ void analyzer::analyze(QUEUE_T &genomes_queue) {
                                                                                  results_vector,
                                                                                  stream_genome_size);
     }
-
-    cuda_validator::check_error(cudaEventSynchronize(stopEvent));
 
     cuda_validator::check_error(
         cudaMemcpy(host_result_vector.data(), results_vector, results_buffer_size_in_bytes, cudaMemcpyDeviceToHost));
@@ -103,26 +97,15 @@ void analyzer::analyze(QUEUE_T &genomes_queue) {
       host_result_vector_total['T' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
     }
 
-    cuda_validator::check_error(cudaEventRecord(stopEvent, nullptr));
-    cuda_validator::check_error(cudaEventSynchronize(stopEvent));
+    cuda_stopwatch.stop();
 
     // Check results.
     validator::validate_results(host_result_vector_total);
-
-    float time;
-    cuda_validator::check_error(cudaEventElapsedTime(&time, startEvent, stopEvent));
-    std::cout << "  Host to Device bandwidth (GB/s): " << static_cast<double>(filesize) * 1e-6 / time << std::endl;
-
   }
-
-  // Clean up events.
-  cuda_validator::check_error(cudaEventDestroy(startEvent));
-  cuda_validator::check_error(cudaEventDestroy(stopEvent));
 
   for (auto &stream: streams) {
     cuda_validator::check_error(cudaStreamDestroy(stream));
   }
 
   cudaFree(device_genome_buffer);
-
 }
