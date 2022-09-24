@@ -6,5 +6,5 @@
 **/cmake-build-*
 
 # data_generator
-/data_generator/bank
-/data_generator/genomes_paths.txt
+/data_generator/*bank
+/data_generator/*genomes_paths.txt
