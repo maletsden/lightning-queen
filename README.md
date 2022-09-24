@@ -1,13 +1,9 @@
 # Lightning Queen
 
----
-
 This is a CUDA project that is designed to compare different approaches for reading data from SSD to GPU for future analyzing of that data.
 For testing data I chose to work with genomes and all the results wil be shown for short fake 100 MB long genomes.
 
 # Testing Data
-
----
 
 For generating fake 100 MB long genomes there is small project written in `data` directory.
 
@@ -30,8 +26,6 @@ Usage: ./data_generator <GENOMES_NUM> <THREADS_NUM>
 
 # Results
 
----
-
 > Note: The performance of analyzing 12 randomly generated genomes are tested solutions is tested on NVIDIA GeForce GTX 1650. 
 
 Comparison of performance of different CUDA memory management algorithms.
@@ -47,8 +41,6 @@ Comparison of GPU bandwidth (in GB per second) for each solution:
 
 
 # Run solution
-
----
 
 Build all solutions:
 
@@ -73,8 +65,6 @@ cd ../..
 ```
 
 # Tests
-
----
 
 Build all solutions:
 ```bash
