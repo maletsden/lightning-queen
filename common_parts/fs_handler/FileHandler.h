@@ -1,6 +1,10 @@
 #ifndef COMMON_PARTS_FILE_HANDLER_H
 #define COMMON_PARTS_FILE_HANDLER_H
 
+#include <string>
+
+#include "fs_type_traits.h"
+
 namespace fs_handler {
   template<typename stream_type, typename S>
   auto assert_file_is_open(const stream_type &file, S &&msg) {
@@ -31,25 +35,16 @@ namespace fs_handler {
     return FileHandler<std::ifstream>{filepath};
   }
 
+  inline auto make_readable_binary_file_handler(const std::string &filepath) {
+    return FileHandler<std::ifstream>{filepath, std::ios_base::in | std::ios_base::binary};
+  }
+
   inline auto make_writable_file_handler(const std::string &filepath) {
     return FileHandler<std::ofstream>{filepath, std::ios_base::out};
   }
 
   inline auto make_appendable_file_handler(const std::string &filepath) {
     return FileHandler<std::ofstream>{filepath, std::ios_base::app};
-  }
-
-
-  template<typename T, typename D>
-  FileHandler<T>& operator<<(FileHandler<T>& file_handler, D &&data) {
-    file_handler.file << std::forward<D>(data);
-    return file_handler;
-  }
-
-  template<typename T, typename D>
-  FileHandler<T>&& operator<<(FileHandler<T>&& file_handler, D &&data) {
-    file_handler.file << std::forward<D>(data);
-    return std::move(file_handler);
   }
 }
 

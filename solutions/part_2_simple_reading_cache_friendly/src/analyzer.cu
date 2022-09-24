@@ -72,10 +72,10 @@ void analyzer::analyze(ThreadSafeQueue<std::string> &genomes_queue) {
 
     for (int i = 0; i < threadsPerBlock; ++i) {
       host_result_vector_total['A' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
-      host_result_vector_total['C' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
-      host_result_vector_total['G' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
-      host_result_vector_total['N' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
-      host_result_vector_total['T' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'A' - 'A'];
+      host_result_vector_total['C' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'C' - 'A'];
+      host_result_vector_total['G' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'G' - 'A'];
+      host_result_vector_total['N' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'N' - 'A'];
+      host_result_vector_total['T' - 'A'] += host_result_vector[i * CACHE_LINE_SIZE + 'T' - 'A'];
     }
 
     cuda_stopwatch.stop();

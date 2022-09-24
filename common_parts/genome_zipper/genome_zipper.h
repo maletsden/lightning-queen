@@ -4,18 +4,10 @@
 #include <string>
 #include <array>
 
+#include "ZippedGenome.h"
+
 namespace genome_zipper {
   using BYTE = std::uint8_t;
-
-  class ZippedGenome {
-  public:
-    bool is_empty() const {
-      return real_size == 0;
-    }
-
-    size_t real_size{0};
-    std::string container;
-  };
 
   constexpr std::array<BYTE, 'T' - 'A' + 1> encodeChar = {
       0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 3
@@ -27,10 +19,10 @@ namespace genome_zipper {
 
   char zip_3_chars(const char *chars);
 
-  void unzip_3_chars(char zipped_chars, std::string &result);
+  void unzip_3_chars(char zipped_chars, char *result);
 
   auto zip(const char *genome, size_t genome_size) {
-    ZippedGenome zipped_genome;
+    ZippedGenome<std::string> zipped_genome;
     zipped_genome.real_size = genome_size;
     zipped_genome.container.reserve((genome_size + 2) / 3);
 
@@ -117,12 +109,11 @@ namespace genome_zipper {
   }
 
   auto unzip(const char *zipped_genome, size_t real_genome_size) {
-    std::string genome;
-
     const auto zipped_genome_size = (real_genome_size + 2) / 3;
+    std::string genome(zipped_genome_size * 3, 'A');
 
     for (auto i = 0; i < zipped_genome_size; ++i) {
-      unzip_3_chars(zipped_genome[i], genome);
+      unzip_3_chars(zipped_genome[i], genome.data() + (i * 3));
     }
 
     genome.resize(real_genome_size);
@@ -130,11 +121,11 @@ namespace genome_zipper {
     return genome;
   }
 
-  auto unzip(const ZippedGenome &zipped_genome) {
+  auto unzip(const ZippedGenome<std::string> &zipped_genome) {
     return unzip(zipped_genome.container.data(), zipped_genome.real_size);
   }
 
-  void unzip_3_chars(char zipped_chars, std::string &result) {
+  void unzip_3_chars(char zipped_chars, char *result) {
     constexpr auto first_2_bits = 0b11000000;
     constexpr auto second_2_bits = 0b00110000;
     constexpr auto third_2_bits = 0b00001100;
@@ -144,9 +135,9 @@ namespace genome_zipper {
 
     switch (N_num) {
       case 0b00000000:
-        result.push_back(decodeChar[(zipped_chars & second_2_bits) >> 4]);
-        result.push_back(decodeChar[(zipped_chars & third_2_bits) >> 2]);
-        result.push_back(decodeChar[zipped_chars & fourth_2_bits]);
+        result[0] = decodeChar[(zipped_chars & second_2_bits) >> 4];
+        result[1] = decodeChar[(zipped_chars & third_2_bits) >> 2];
+        result[2] = decodeChar[zipped_chars & fourth_2_bits];
         break;
       case 0b01000000: {
         // in this case we also need to save index of N
@@ -156,9 +147,9 @@ namespace genome_zipper {
         char decoded[2] = {decodeChar[(zipped_chars & third_2_bits) >> 2], decodeChar[zipped_chars & fourth_2_bits]};
         auto decoded_i = 0;
 
-        result.push_back(0 == N_index ? 'N' : decoded[decoded_i++]);
-        result.push_back(1 == N_index ? 'N' : decoded[decoded_i++]);
-        result.push_back(2 == N_index ? 'N' : decoded[decoded_i]);
+        result[0] = (0 == N_index ? 'N' : decoded[decoded_i++]);
+        result[1] = (1 == N_index ? 'N' : decoded[decoded_i++]);
+        result[2] = (2 == N_index ? 'N' : decoded[decoded_i]);
         break;
       }
       case 0b10000000: {
@@ -168,16 +159,16 @@ namespace genome_zipper {
         // decode "not N" char
         const char decoded = decodeChar[(zipped_chars & third_2_bits) >> 2];
 
-        result.push_back(0 == not_N_index ? decoded : 'N');
-        result.push_back(1 == not_N_index ? decoded : 'N');
-        result.push_back(2 == not_N_index ? decoded : 'N');
+        result[0] = (0 == not_N_index ? decoded : 'N');
+        result[1] = (1 == not_N_index ? decoded : 'N');
+        result[2] = (2 == not_N_index ? decoded : 'N');
         break;
       }
       default:
         // in other case (N_num == 3) we can just add them
-        result.push_back('N');
-        result.push_back('N');
-        result.push_back('N');
+        result[0] = 'N';
+        result[1] = 'N';
+        result[2] = 'N';
         break;
     }
   }

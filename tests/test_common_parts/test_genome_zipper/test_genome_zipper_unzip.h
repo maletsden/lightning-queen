@@ -22,7 +22,7 @@ TEST_F(TestGenomeZipperUnzip, SimpleZippedGenomeTest) {
   constexpr auto expected_genome_size = 3;
   constexpr char expected_genome[] = "ACG";
 
-  const genome_zipper::ZippedGenome zipped_genome{expected_genome_size, std::string(1, 0b00000110)};
+  const genome_zipper::ZippedGenome<std::string> zipped_genome{expected_genome_size, std::string(1, 0b00000110)};
   const auto genome = genome_zipper::unzip(zipped_genome);
   CompareResults(genome, expected_genome, expected_genome_size);
 }

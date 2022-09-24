@@ -9,7 +9,8 @@ class PinnedMemoryHandler {
 public:
   PinnedMemoryHandler() = default;
 
-  explicit PinnedMemoryHandler(size_t filesize, unsigned int flags = cudaHostAllocDefault);
+  explicit PinnedMemoryHandler(size_t size, unsigned int flags = cudaHostAllocDefault);
+  explicit PinnedMemoryHandler(size_t size, char *data);
 
   ~PinnedMemoryHandler();
 
@@ -22,20 +23,20 @@ public:
   PinnedMemoryHandler &operator=(PinnedMemoryHandler &&) noexcept = default;
 
   [[nodiscard]] auto get_data() const noexcept {
-    return data;
+    return m_data;
   }
 
   [[nodiscard]] auto get_size() const noexcept {
-    return size;
+    return m_size;
   }
 
   [[nodiscard]] bool is_empty() const noexcept {
-    return size == 0;
+    return m_size == 0;
   }
 
 private:
-  char *data{nullptr};
-  size_t size{0};
+  char *m_data{nullptr};
+  size_t m_size{0};
 };
 
 

@@ -1,12 +1,19 @@
 #include "PinnedMemoryHandler.cuh"
 
-#include <cuda.h>
+#include <cuda_runtime.h>
 #include <cuda_validator/cuda_validator.h>
+#include <stdexcept>
 
-PinnedMemoryHandler::PinnedMemoryHandler(size_t filesize, unsigned int flags) : size(filesize) {
-  cuda_validator::check_error(cudaHostAlloc(&data, filesize, flags));
+PinnedMemoryHandler::PinnedMemoryHandler(size_t size, unsigned int flags) : m_size(size) {
+  cuda_validator::check_error(cudaHostAlloc(&m_data, size, flags));
+  if (!m_data) {
+    throw std::runtime_error("Failed allocating pinned memory.");
+  }
 }
+
+PinnedMemoryHandler::PinnedMemoryHandler(size_t size, char *data) : m_size(size), m_data(data) {}
 
 PinnedMemoryHandler::~PinnedMemoryHandler() {
-  if (data) cudaFreeHost(data);
+  if (m_data) cudaFreeHost(m_data);
 }
+

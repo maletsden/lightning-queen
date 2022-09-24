@@ -7,10 +7,10 @@
 
 void producer::produce(analyzer::QUEUE_T &genomes_queue, const std::string &genomes_directory,
                        const std::string &genomes_paths_file_path) {
-  std::ifstream genomes_paths_file(genomes_paths_file_path.c_str());
+  auto genomes_paths_file_handler = fs_handler::make_readable_file_handler(genomes_paths_file_path);
 
   std::string genome_path;
-  while (std::getline(genomes_paths_file, genome_path)) {
+  while (std::getline(genomes_paths_file_handler.file, genome_path)) {
     if (genome_path.empty()) continue;
 
     const auto filepath = genomes_directory + genome_path;

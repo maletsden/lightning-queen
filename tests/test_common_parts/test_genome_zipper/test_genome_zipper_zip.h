@@ -4,7 +4,8 @@
 
 class TestGenomeZipperZip : public ::testing::Test {
 protected:
-  static void CompareResults(const genome_zipper::ZippedGenome &zipped, const genome_zipper::ZippedGenome &expected) {
+  static void CompareResults(const genome_zipper::ZippedGenome<std::string> &zipped,
+                             const genome_zipper::ZippedGenome<std::string> &expected) {
     EXPECT_EQ(zipped.container.size(), expected.container.size());
     EXPECT_EQ(zipped.real_size, expected.real_size);
     EXPECT_STREQ(zipped.container.data(), expected.container.data());
@@ -15,7 +16,7 @@ TEST_F(TestGenomeZipperZip, SimpleZeroNTestArrayInput) {
   constexpr auto genome_size = 3;
   constexpr char genome[] = "ACG";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome_size;
   expected_result.container.push_back(0b00000110);
 
@@ -28,7 +29,7 @@ TEST_F(TestGenomeZipperZip, SimpleZeroNTestPointerInput) {
   constexpr auto genome_size = 3;
   constexpr char genome[] = "ACG";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome_size;
   expected_result.container.push_back(0b00000110);
 
@@ -40,7 +41,7 @@ TEST_F(TestGenomeZipperZip, SimpleZeroNTestPointerInput) {
 TEST_F(TestGenomeZipperZip, SimpleZeroNTestStringInput) {
   const std::string genome = "ACG";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(0b00000110);
 
@@ -52,7 +53,7 @@ TEST_F(TestGenomeZipperZip, SimpleZeroNTestStringInput) {
 TEST_F(TestGenomeZipperZip, SimpleOneNTest) {
   std::string genome = "NAA";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(0b01000000);
 
@@ -86,7 +87,7 @@ TEST_F(TestGenomeZipperZip, SimpleOneNTest) {
 TEST_F(TestGenomeZipperZip, SimpleTwoNTest) {
   std::string genome = "NNC";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(static_cast<char>(0b10100100));
 
@@ -120,7 +121,7 @@ TEST_F(TestGenomeZipperZip, SimpleTwoNTest) {
 TEST_F(TestGenomeZipperZip, SimpleThreeNTest) {
   const std::string genome = "NNN";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(static_cast<char>(0b11000000));
 
@@ -132,7 +133,7 @@ TEST_F(TestGenomeZipperZip, SimpleThreeNTest) {
 TEST_F(TestGenomeZipperZip, LongGenomeTest) {
   const std::string genome = "ACGTNA";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(0b00000110);
   expected_result.container.push_back(0b01011100);
@@ -146,7 +147,7 @@ TEST_F(TestGenomeZipperZip, NotDiv3GenomeTest) {
   // expected to interpret as "ACGTAA" (zeros in the end)
   std::string genome = "ACGT";
 
-  genome_zipper::ZippedGenome expected_result;
+  genome_zipper::ZippedGenome<std::string> expected_result;
   expected_result.real_size = genome.size();
   expected_result.container.push_back(0b00000110);
   expected_result.container.push_back(0b00110000);

@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
   const auto zipper_threads_num = std::max(thread_num - 2, 1);
 
   constexpr auto genome_paths_file_path = "../genomes_paths.txt";
+  constexpr auto zipped_genome_ext = ".3zip";
 
   // read genomes paths
   std::ifstream genomes_paths_file(genome_paths_file_path);
@@ -104,10 +105,10 @@ int main(int argc, char **argv) {
       }
 
       const auto zipped_genome_path =
-          output_directory + "/zipped_genome_" + std::to_string(zipped_genome_idx) + ".3zip";
+          output_directory + "/zipped_genome_" + std::to_string(zipped_genome_idx) + zipped_genome_ext;
       auto file_handler = fs_handler::make_writable_file_handler(zipped_genome_path);
 
-      file_handler << std::to_string(zipped_genome_data.real_size) << zipped_genome_data.container;
+      file_handler << std::to_string(zipped_genome_data.real_size) << '\n' << zipped_genome_data.container;
 
       std::cout << "Successfully zipped genome " << zipped_genome_path << std::endl;
     }
@@ -116,6 +117,12 @@ int main(int argc, char **argv) {
   reader.join();
   for (auto &zipper_thread: zipper_threads) {
     zipper_thread.join();
+  }
+
+  // save genomes paths
+  auto genomes_paths_file_handler = fs_handler::make_writable_file_handler("../zipped_genomes_paths.txt");
+  for (int i = 0; i < genomes_paths.size(); ++i) {
+    genomes_paths_file_handler << "./zipped_bank/zipped_genome_" << i << zipped_genome_ext << '\n';
   }
 
 }
